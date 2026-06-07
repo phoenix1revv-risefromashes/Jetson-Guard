@@ -28,10 +28,10 @@ class Camera:
     def show_live_view(self):
 
         while True:
-            print("Camera Opened Successfully\nPress Q to Exit")
+            
         
             frame = self.read_frames()
-            cv2.imshow("Person Recognition- Camera Test", frame)
+            cv2.imshow("Camera Test - press Q to exit", frame)
 
             if cv2.waitKey(1) & 0xFF == ord ("q"):
                 break 
