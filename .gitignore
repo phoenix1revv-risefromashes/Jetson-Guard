@@ -1,0 +1,30 @@
+#python virtual environment
+.venv/
+venv/
+
+#python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE/editor files
+.vscode/
+.idea/
+
+#OS files
+.DS_store
+
+#Trained Modekls:
+models/*
+!models/.gitkeep
+
+
+#Large_generated files 
+data/known_faces/*
+!data/known_faces/.gitkeep
+
+#logs
+*.logs
+
+
+
