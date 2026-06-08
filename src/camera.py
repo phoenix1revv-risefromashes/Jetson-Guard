@@ -25,12 +25,15 @@ class Camera:
         return frames
     
 
-    def show_live_view(self):
+    def show_live_view(self, frame_processor=None):
 
         while True:
-            
-        
-            frame = self.read_frames()
+            frame =self.read_frames()
+
+            if frame_processor is not None:
+                frame = frame_processor.process_frame(frame)
+
+                
             cv2.imshow("Camera Test - press Q to exit", frame)
 
             if cv2.waitKey(1) & 0xFF == ord ("q"):
