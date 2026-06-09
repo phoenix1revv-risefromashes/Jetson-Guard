@@ -1,8 +1,8 @@
-#python virtual environment
+# Python virtual environments
 .venv/
 venv/
 
-#python cache files
+# Python cache files
 __pycache__/
 *.pyc
 *.pyo
@@ -11,20 +11,55 @@ __pycache__/
 .vscode/
 .idea/
 
-#OS files
-.DS_store
+# OS files
+.DS_Store
+Thumbs.db
 
-#Trained Modekls:
-models/*
-!models/.gitkeep
+# Logs
+*.log
 
-
-#Large_generated files 
+# Private enrolled face data
 data/known_faces/*
 !data/known_faces/.gitkeep
 
-#logs
-*.logs
+# Datasets - detection
+datasets/detection/raw/*
+datasets/detection/processed/images/train/*
+datasets/detection/processed/images/val/*
+datasets/detection/processed/labels/train/*
+datasets/detection/processed/labels/val/*
 
+# Keep detection dataset folder structure
+!datasets/detection/raw/.gitkeep
+!datasets/detection/processed/images/train/.gitkeep
+!datasets/detection/processed/images/val/.gitkeep
+!datasets/detection/processed/labels/train/.gitkeep
+!datasets/detection/processed/labels/val/.gitkeep
 
+# Datasets - recognition
+datasets/recognition/raw/*
+datasets/recognition/processed/train/*
+datasets/recognition/processed/val/*
 
+# Keep recognition dataset folder structure
+!datasets/recognition/raw/.gitkeep
+!datasets/recognition/processed/train/.gitkeep
+!datasets/recognition/processed/val/.gitkeep
+
+# Trained models and exported weights
+models/*
+!models/.gitkeep
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.pkl
+*.joblib
+
+# Training outputs
+runs/
+checkpoints/
+wandb/
+
+# Large generated media
