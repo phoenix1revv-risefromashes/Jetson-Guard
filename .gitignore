@@ -18,9 +18,6 @@ Thumbs.db
 # Logs
 *.log
 
-# Private enrolled face data
-data/known_faces/*
-!data/known_faces/.gitkeep
 
 # Datasets - detection
 datasets/detection/raw/*
