@@ -1,11 +1,11 @@
 from ultralytics import YOLO
 
 DATA_YAML = "datasets/detection/data.yaml"
-MODEL_CONFIG = "yolo11n.yaml"
+MODEL_CONFIG = "yolo11s.yaml"
 
-EPOCHS =5
-IMAGE_SIZE =650
-BATCH_SIZE = 16
+EPOCHS =50
+IMAGE_SIZE =672
+BATCH_SIZE = 48
 
 PROJECT_DIR = "runs/person_detector"
 RUN_NAME = "small_test_run"

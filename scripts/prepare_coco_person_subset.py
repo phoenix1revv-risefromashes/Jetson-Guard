@@ -21,8 +21,8 @@ VAL_OUTPUT_LABELS_DIR = COCO_PROCESSED_DIR/'labels'/'val'
 
 YOLO_PERSON_CLASS_ID = 0
 
-MAX_TRAIN_IMAGES = 200
-MAX_VAL_IMAGES = 50
+MAX_TRAIN_IMAGES = 10000
+MAX_VAL_IMAGES = 2000
 
 
 
@@ -200,6 +200,6 @@ def main():
 
     print("\n COCO person subset preparation complete..")
 
-    
+
 if __name__ == "__main__":
     main()
