@@ -10,9 +10,10 @@ MODEL_PATH = "models/face_model.yml"
 LABELS_PATH = "models/labels.json"
 
 
-DETECTION_RAW_DIR = "datasets/detection/raw"
-DETECTION_PROCESSED_DIR = "datasets/detection/processed"
+YOLO_MODEL_DIR = 'models/best.pt'
+YOLO_CONFIDENCE_THRESHOLD = 0.50
+MIN_PERSON_HEIGHT_RATIO = 0.35
 
-RECOGNITION_RAW_DIR = "datasets/recognition/raw"
-RECOGNITION_PROCESSED_DIR = "datasets/recognition/processed"
+
+
 
