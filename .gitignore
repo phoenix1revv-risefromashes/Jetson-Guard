@@ -6,6 +6,7 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
+*.cache
 
 # IDE/editor files
 .vscode/
