@@ -27,6 +27,10 @@ ENROLLMENT_IMAGE_COUNT = 30
 ENROLL_IMAGE_CAPTURE_DELAY= 0.3
 
 
+FACE_EMBEDDINGS_DIR = 'data/face_embeddings'
+FACE_EMBEDDINGS_FILE = 'data/face_embeddings/known_faces.pkl'
+FACE_RECOGNITION_THRESHOLD = 0.55
+
 
 
 
