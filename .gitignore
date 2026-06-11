@@ -44,6 +44,10 @@ datasets/recognition/processed/val/*
 !datasets/recognition/processed/train/.gitkeep
 !datasets/recognition/processed/val/.gitkeep
 
+#keep data /known_faces structure
+data/known_faces/*
+!data/known_faces/.gitkeep
+
 # Trained models and exported weights
 models/*
 !models/.gitkeep
