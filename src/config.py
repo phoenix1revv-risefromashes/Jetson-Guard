@@ -1,4 +1,4 @@
-from pathlib import Path
+
 
 
 CAMERA_INDEX = 0
@@ -10,9 +10,25 @@ MODEL_PATH = "models/face_model.yml"
 LABELS_PATH = "models/labels.json"
 
 
+
 YOLO_MODEL_DIR = 'models/best.pt'
+
 YOLO_CONFIDENCE_THRESHOLD = 0.50
+
 MIN_PERSON_HEIGHT_RATIO = 0.35
+
+MIN_CENTER_X_RATIO = 0.3
+MAX_CENTER_X_RATIO = 0.7
+
+
+
+KNOW_FACES_DIR = 'data/known_faces'
+ENROLLMENT_IMAGE_COUNT = 30
+ENROLL_IMAGE_CAPTURE_DELAY= 0.3
+
+
+
+
 
 
 
