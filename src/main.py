@@ -10,6 +10,7 @@ from face_recognizer import FaceRecognizer
 
 from recognition_processor import RecognitionProcessor
 
+from liveness_detector import LivenessDetector
 
 
 def main():
@@ -20,11 +21,14 @@ def main():
     
     face_detector = FaceDetector()
     face_recognizer = FaceRecognizer()
+    liveness_detector = LivenessDetector()
+
 
     recognition_processor = RecognitionProcessor(
         yolo_person_detector=yolo_person_detector,
         face_detector=face_detector,
-        face_recognizer=face_recognizer
+        face_recognizer=face_recognizer,
+        liveness_detector = liveness_detector
     )
 
 
