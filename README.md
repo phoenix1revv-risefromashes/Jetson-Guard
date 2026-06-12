@@ -1,6 +1,6 @@
 # Edge-Based Person Recognition for Safety and Access Monitoring Using Jetson Orin
 
-An edge-AI safety and access monitoring system designed to detect close human subjects, validate detections, reject person-shaped false positives, and support future local identity recognition on NVIDIA Jetson Orin.
+An edge-AI safety and access monitoring system designed to detect close human subjects, validate detections, reject person-shaped false positives, enroll known faces locally, and recognize known vs unknown people on NVIDIA Jetson Orin.
 
 <p align="center">
   <a href="assets/">
@@ -16,31 +16,38 @@ An edge-AI safety and access monitoring system designed to detect close human su
 
 ## Project Overview
 
-This project builds a local computer vision pipeline for safety and access monitoring using a camera and edge inference. The system detects a close human subject, validates that the detected region contains a visible face, and rejects false positives such as hanging clothing, unclear objects, or person-shaped background noise.
+This project builds a local computer vision pipeline for safety and access monitoring using a camera and edge inference. The system detects a close human subject, validates that the detected region contains a visible face, rejects false positives such as hanging clothing or person-shaped background objects, enrolls known faces locally, and recognizes whether a live detected subject is known or unknown.
 
-The system is not designed as a general surveillance detector. It is designed as a close-range safety-scanning pipeline where a valid detection requires both:
+The system is not designed as a general surveillance detector. It is designed as a close-range safety-scanning and access-monitoring pipeline where a valid detection requires both:
 
 1. A close person-like region detected by YOLO.
 2. A visible face confirmed inside that same detected region.
 
-This creates a two-stage validation system:
+The recognition stage adds another layer:
+
+3. A face embedding generated from the confirmed face crop.
+4. A comparison against a private local known-face database.
+
+This creates a multi-stage validation and recognition system:
 
 ```text
 YOLO person detection
 +
 Face confirmation inside YOLO box
++
+Face embedding comparison
 =
-Confirmed close-person detection
+Known / Unknown close-person recognition
 ```
 
-The long-term goal is to extend this system into local known-person recognition, where the scanner can classify a detected subject as known or unknown without relying on cloud inference.
+The long-term goal is to build a complete local identity-aware safety scanner that can classify a detected subject as known or unknown without relying on cloud inference.
 
 ---
 
 ## Current Version
 
 ```text
-v0.3.1
+v0.5.0
 ```
 
 Current functionality:
@@ -50,6 +57,11 @@ Current functionality:
 - Close-subject filtering using bounding-box height ratio.
 - Face confirmation inside each YOLO-detected person box.
 - Rejection of hanging clothing and person-shaped false positives.
+- Local face enrollment workflow.
+- Automatic face embedding database update after enrollment.
+- Private known-face database using `known_faces.pkl`.
+- Live known/unknown face recognition.
+- Integrated recognition pipeline through `src/main.py`.
 - Demo and bug-fix evidence videos.
 - Local edge-oriented architecture prepared for Jetson Orin deployment.
 
@@ -74,9 +86,13 @@ Crop Detected Person Region
 ↓
 Face Confirmation
 ↓
-Detection Validation Decision
+Face Crop
 ↓
-Accepted / Rejected Detection
+Face Embedding Generation
+↓
+Compare Against Known Face Database
+↓
+Known / Unknown Decision
 ↓
 Annotated Live Output
 ↓
@@ -85,7 +101,7 @@ Safety / Access Monitoring Output
 
 ---
 
-## Why YOLO + Face Confirmation?
+## Why YOLO + Face Confirmation + Face Recognition?
 
 A face detector alone can only answer:
 
@@ -108,29 +124,33 @@ The combined system is stronger because it asks:
 ```text
 Is there a close person-shaped region?
 Does that same detected region contain a visible face?
+Does that face match a locally enrolled known person?
 ```
 
 This makes the pipeline stricter and more useful for safety and access monitoring.
 
 ---
 
-## Current Detection Rule
+## Current Recognition Rule
 
-A detection is accepted only when all conditions are satisfied:
+A recognition result is accepted only when all conditions are satisfied:
 
 ```text
 YOLO detects a person-shaped object
 AND detection confidence passes threshold
 AND detected box is large enough to be close
 AND a visible face is found inside that same YOLO box
+AND a valid face embedding is generated
+AND the embedding is compared against the known-face database
 ```
 
-A detection is rejected when:
+A detection is rejected or ignored when:
 
 ```text
 No face is found inside the YOLO box
 OR the object is too small/far away
 OR the object is clothing/noise/unclear subject
+OR the face crop cannot produce a valid embedding
 ```
 
 This means the system intentionally rejects unclear body-only detections or side/profile cases where a visible face is not confirmed. This is acceptable for the current safety-scanning workflow because the subject is expected to face the scanner.
@@ -272,6 +292,87 @@ This behavior is acceptable for the current safety-scanning workflow.
 
 ---
 
+### v0.4.0 — Face Enrollment Module
+
+Added a local face enrollment workflow for creating a known-person dataset.
+
+Major work completed:
+
+- Added an independent face enrollment script.
+- Used YOLO person detection before enrollment.
+- Required face confirmation inside the YOLO person crop.
+- Added manual enrollment start behavior.
+- Saved verified face crops locally under each person’s folder.
+- Kept enrolled face images private and ignored by Git.
+
+Enrollment output structure:
+
+```text
+data/known_faces/
+└── phoenix/
+    ├── phoenix_001.jpg
+    ├── phoenix_002.jpg
+    └── phoenix_003.jpg
+```
+
+Main file:
+
+```text
+scripts/enroll_face.py
+```
+
+Purpose:
+
+```text
+Create a clean local dataset of known people for future recognition.
+```
+
+---
+
+### v0.5.0 — Known/Unknown Face Recognition
+
+Added the live known/unknown recognition pipeline.
+
+Major work completed:
+
+- Added face embedding builder.
+- Added private known-face embedding database workflow.
+- Added `FaceRecognizer` module.
+- Added `RecognitionProcessor` integration layer.
+- Updated `YOLODetector` to expose reusable person detection data.
+- Integrated live known/unknown recognition into `src/main.py`.
+- Added automatic embedding update after enrollment.
+- Added recognizer test script.
+- Added live recognition test script.
+- Added demo video evidence.
+
+Recognition flow:
+
+```text
+Close person detected
+↓
+Face confirmed
+↓
+Face crop extracted
+↓
+Face embedding generated
+↓
+Compared with known face database
+↓
+Known / Unknown result
+```
+
+Known limitations:
+
+```text
+Phone-screen face images can still be recognized.
+Multiple-face handling needs a stronger single-subject safety gate.
+Liveness / anti-spoof detection is not implemented yet.
+Further robustness testing is needed under lighting, angle, and occlusion changes.
+```
+
+---
+
 ## Project Structure
 
 ```text
@@ -280,14 +381,24 @@ This behavior is acceptable for the current safety-scanning workflow.
 │   ├── architecture/
 │   │   └── architecture.png
 │   │
-│   ├── demo_videos/
-│   │   └── v0.3.0/
-│   │       └── v0.3.0_yolo_live_close_person_detection_demo.mp4
+│   ├── demos/
+│   │   ├── v0.3.0/
+│   │   │   └── v0.3.0_yolo_live_close_person_detection_demo.mp4
+│   │   │
+│   │   └── v0.5.0/
+│   │       └── live_known_unknown_face_recognition_demo.mp4
 │   │
 │   └── bug_evidence/
 │       └── v0.3.1/
 │           ├── v0.3.1_before_clothing_false_positive_bug.mp4
 │           └── v0.3.1_after_face_confirmation_false_positive_fix.mp4
+│
+├── data/
+│   ├── known_faces/
+│   │   └── .gitkeep
+│   │
+│   └── face_embeddings/
+│       └── .gitkeep
 │
 ├── datasets/
 │   └── detection/
@@ -301,12 +412,18 @@ This behavior is acceptable for the current safety-scanning workflow.
 │
 ├── scripts/
 │   ├── prepare_coco_person_subset.py
-│   └── train_yolo_person_detector.py
+│   ├── train_yolo_person_detector.py
+│   ├── enroll_face.py
+│   ├── build_face_embeddings.py
+│   ├── test_face_recognizer.py
+│   └── test_live_recognition.py
 │
 ├── src/
 │   ├── camera.py
 │   ├── config.py
 │   ├── face_detector.py
+│   ├── face_recognizer.py
+│   ├── recognition_processor.py
 │   ├── main.py
 │   └── yolo_detector.py
 │
@@ -328,8 +445,11 @@ Responsibilities:
 - Loads camera configuration.
 - Creates the camera object.
 - Creates the YOLO detector object.
+- Creates the face detector object.
+- Creates the face recognizer object.
+- Creates the recognition processor.
 - Starts the live camera loop.
-- Sends each frame into the detection pipeline.
+- Sends each frame into the integrated recognition pipeline.
 
 ---
 
@@ -351,13 +471,15 @@ The key design is that the camera module can accept any object with:
 process_frame(frame)
 ```
 
-This allows the system to switch between face detection, YOLO detection, and future recognition modules cleanly.
+or any callable frame processor object.
+
+This allows the system to switch between face detection, YOLO detection, and recognition modules cleanly.
 
 ---
 
 ### `src/yolo_detector.py`
 
-Main runtime detection and validation module.
+YOLO-based person detection module.
 
 Responsibilities:
 
@@ -365,14 +487,27 @@ Responsibilities:
 - Run person detection on every frame.
 - Apply confidence filtering.
 - Apply close-subject height-ratio filtering.
-- Crop the detected person region.
-- Run face confirmation inside the YOLO box.
-- Draw accepted detections on the live frame.
+- Return reusable person bounding box data.
+- Support YOLO-only frame processing for testing.
 
-Current accepted label:
+The detector exposes reusable person detections through:
 
-```text
-Close Person
+```python
+detect_persons(frame)
+```
+
+Example output:
+
+```python
+[
+    {
+        "x1": 120,
+        "y1": 80,
+        "x2": 500,
+        "y2": 700,
+        "confidence": 0.91
+    }
+]
 ```
 
 ---
@@ -392,6 +527,56 @@ In the current pipeline, this module confirms whether the YOLO-detected person r
 
 ---
 
+### `src/face_recognizer.py`
+
+Known/unknown face recognition module.
+
+Responsibilities:
+
+- Load the private known-face embedding database.
+- Convert a live cropped face image into an embedding.
+- Compare the live embedding against known stored embeddings.
+- Return a recognized name or `Unknown`.
+
+Output examples:
+
+```text
+Known: phoenix
+```
+
+or:
+
+```text
+Unknown
+```
+
+The recognizer uses:
+
+```text
+data/face_embeddings/known_faces.pkl
+```
+
+---
+
+### `src/recognition_processor.py`
+
+Main integration module for live recognition.
+
+Responsibilities:
+
+- Receive each camera frame.
+- Run YOLO person detection.
+- Crop detected person regions.
+- Run face detection inside each person region.
+- Crop the detected face.
+- Send the face crop to `FaceRecognizer`.
+- Draw known/unknown labels on the live frame.
+- Ignore YOLO false positives when no face is found.
+
+This module keeps `src/main.py` clean while handling the full frame-processing workflow.
+
+---
+
 ### `src/config.py`
 
 Central configuration file.
@@ -401,9 +586,13 @@ Example values:
 ```python
 CAMERA_INDEX = 0
 
-YOLO_MODEL_PATH = "models/person_detector/best.pt"
+YOLO_MODEL_DIR = "models/person_detector/best.pt"
 YOLO_CONFIDENCE_THRESHOLD = 0.50
 MIN_PERSON_HEIGHT_RATIO = 0.35
+
+KNOW_FACES_DIR = "data/known_faces"
+FACE_EMBEDDINGS_FILE = "data/face_embeddings/known_faces.pkl"
+FACE_RECOGNITION_THRESHOLD = 0.55
 ```
 
 Meaning:
@@ -411,6 +600,7 @@ Meaning:
 ```text
 YOLO_CONFIDENCE_THRESHOLD = minimum confidence needed to keep a detection
 MIN_PERSON_HEIGHT_RATIO = minimum box height ratio needed to count as close
+FACE_RECOGNITION_THRESHOLD = maximum distance allowed for known-face match
 ```
 
 For a 1080p camera frame:
@@ -420,6 +610,129 @@ For a 1080p camera frame:
 ```
 
 So the detected person box must be at least 378 pixels tall to pass the close-subject filter.
+
+---
+
+## Face Enrollment and Recognition Workflow
+
+### 1. Enroll a Person
+
+Run:
+
+```bash
+python scripts/enroll_face.py
+```
+
+The script:
+
+```text
+asks for a person name
+detects the person using YOLO
+confirms a face inside the person box
+saves verified face crops
+automatically updates the face embedding database
+```
+
+Output structure:
+
+```text
+data/known_faces/<person_name>/
+```
+
+Example:
+
+```text
+data/known_faces/phoenix/
+├── phoenix_001.jpg
+├── phoenix_002.jpg
+└── phoenix_003.jpg
+```
+
+---
+
+### 2. Automatic Face Embedding Update
+
+After enrollment completes, the system automatically rebuilds:
+
+```text
+data/face_embeddings/known_faces.pkl
+```
+
+This file stores:
+
+```text
+known person names
++
+matching face embeddings
+```
+
+This means live recognition can immediately use the newly enrolled person.
+
+---
+
+### 3. Manual Embedding Rebuild
+
+This is optional because enrollment updates the database automatically.
+
+Run:
+
+```bash
+python scripts/build_face_embeddings.py
+```
+
+Use this when:
+
+```text
+face images were manually added
+face images were deleted
+known-face folders were modified outside the enrollment script
+```
+
+---
+
+### 4. Test Face Recognition
+
+Run:
+
+```bash
+python scripts/test_face_recognizer.py
+```
+
+Expected output:
+
+```text
+Expected name: <person_name>
+Recognized name: <person_name>
+Distance: <score>
+```
+
+---
+
+### 5. Run Live Recognition
+
+Run:
+
+```bash
+python src/main.py
+```
+
+Expected live output:
+
+```text
+Known: <person_name> | <distance>
+```
+
+or:
+
+```text
+Unknown | <distance>
+```
+
+Quit the camera window:
+
+```text
+Press q
+```
 
 ---
 
@@ -491,12 +804,18 @@ The architecture image at the top of this README links to the `assets/` folder, 
 
 ---
 
-### v0.3.0 Demo Evidence
+### Demo Videos
 
-Feature demo video:
+All demo videos are stored under:
 
 ```text
-assets/demo_videos/v0.3.0/v0.3.0_yolo_live_close_person_detection_demo.mp4
+assets/demos/
+```
+
+v0.3.0 demo video:
+
+```text
+assets/demos/v0.3.0/v0.3.0_yolo_live_close_person_detection_demo.mp4
 ```
 
 Purpose:
@@ -505,11 +824,29 @@ Purpose:
 Shows trained YOLO live close-person detection running in the camera pipeline.
 ```
 
+v0.5.0 demo video:
+
+```text
+assets/demos/v0.5.0/live_known_unknown_face_recognition_demo.mp4
+```
+
+Purpose:
+
+```text
+Shows the integrated live recognition pipeline detecting a subject and displaying Known / Unknown identity output.
+```
+
 ---
 
-### v0.3.1 Bug-Fix Evidence
+### Bug-Fix Evidence
 
-Before/after bug evidence videos:
+All bug-fix evidence videos are stored under:
+
+```text
+assets/bug_evidence/
+```
+
+v0.3.1 bug-fix evidence videos:
 
 ```text
 assets/bug_evidence/v0.3.1/v0.3.1_before_clothing_false_positive_bug.mp4
@@ -553,26 +890,66 @@ Press q
 
 ---
 
-## Current Detection Behavior
+## Current Recognition Behavior
 
-The current system accepts a close-person detection only when:
+The current system accepts a close-person recognition attempt only when:
 
 ```text
 YOLO detects a person-shaped object
 AND confidence is high enough
 AND detected box is large enough
 AND a visible face is found inside the same detected box
+AND a valid face embedding is produced
 ```
 
-The system rejects:
+The system rejects or ignores:
 
 - Hanging clothing.
 - Person-shaped background objects.
 - Non-human visual noise.
 - Body-only detections without face confirmation.
 - Partial or unclear scan poses where the face is not visible.
+- Face crops that cannot produce a valid embedding.
 
 This makes the system stricter and better aligned with safety/access scanning.
+
+---
+
+## Private Data Handling
+
+This project intentionally keeps private face data out of Git.
+
+Ignored private data includes:
+
+```text
+data/known_faces/*
+data/face_embeddings/*
+```
+
+Only `.gitkeep` files are tracked so the folder structure remains visible.
+
+Do not commit:
+
+```text
+data/known_faces/<person_name>/
+data/face_embeddings/known_faces.pkl
+```
+
+These files contain private identity-related data.
+
+---
+
+## Known Limitations
+
+This release is a pre-release milestone. The pipeline works, but additional safety and robustness work is planned.
+
+Known limitations:
+
+- Phone-screen face images can still be recognized.
+- Multiple-face handling needs a stronger single-subject safety gate.
+- Liveness / anti-spoof detection is not implemented yet.
+- Recognition robustness still needs more testing under lighting, angle, and occlusion changes.
+- Haar-based face detection works best with visible frontal faces.
 
 ---
 
@@ -584,6 +961,7 @@ This project follows these design principles:
 Edge-only inference
 Privacy-aware local processing
 Two-stage validation: person detection + face confirmation
+Local known/unknown recognition
 Modular software design
 Versioned development workflow
 Evidence-based testing with demo and bug-fix videos
@@ -600,6 +978,8 @@ Completed release tags:
 ```text
 v0.3.0
 v0.3.1
+v0.4.0
+v0.5.0
 ```
 
 Selected v0.3 milestone tags:
@@ -615,6 +995,8 @@ Completed branches included:
 ```text
 v0.3-yolo-face-detection-module
 v0.3.1-fix-clothing-false-positive
+v0.4-face-enrollment-module
+v0.5-known-unknown-face-recognition
 ```
 
 The project also uses pull requests for review before merging into `main`.
@@ -623,55 +1005,43 @@ The project also uses pull requests for review before merging into `main`.
 
 ## Planned Next Stage
 
-### v0.4.0 — Face Enrollment Module
+### v0.5.1 — Single-Subject Recognition Gate
 
 Next goal:
 
 ```text
-Build a local face enrollment system.
+Improve safety when multiple faces or multiple people appear in the frame.
 ```
 
 Planned behavior:
 
-- User enters a person’s name.
-- Camera captures multiple face images.
-- Images are saved locally under that person’s folder.
-- The saved images become the known-person dataset for future recognition.
-
-Planned folder structure:
+- Detect all valid recognition candidates in a frame.
+- Recognize only when exactly one valid face is present.
+- Pause recognition when multiple faces are visible.
+- Display a clear warning such as:
 
 ```text
-data/known_faces/
-└── phoenix/
-    ├── phoenix_001.jpg
-    ├── phoenix_002.jpg
-    └── phoenix_003.jpg
+Multiple faces detected | Recognition paused
 ```
 
 ---
 
-### v0.5.0 — Known-Person Recognition
+### v0.6.0 — Liveness / Anti-Spoof Detection
 
-Planned behavior:
-
-- Load enrolled face images.
-- Generate face embeddings.
-- Compare live face against stored identities.
-- Return known person or unknown person.
-
-Future recognition flow:
+Next goal:
 
 ```text
-Close person detected
-↓
-Face confirmed
-↓
-Face embedding generated
-↓
-Compared with known face database
-↓
-Known / Unknown result
+Reduce phone-screen or image-based face spoofing.
 ```
+
+Planned options:
+
+- Blink detection.
+- Face motion across frames.
+- Texture or screen-pattern checks.
+- Phone/screen object detection.
+- Challenge-response behavior.
+- Optional depth-based validation if supported by hardware.
 
 ---
 
@@ -682,6 +1052,7 @@ The long-term goal is to build a complete edge-based safety and access monitorin
 - Detect a close scan subject.
 - Confirm that the subject is human.
 - Reject false positives and unclear scan cases.
+- Enroll known people locally.
 - Recognize known vs unknown individuals.
 - Run locally on Jetson Orin.
 - Preserve privacy by avoiding cloud inference.
@@ -697,7 +1068,11 @@ Face detection baseline:      Complete
 YOLO person detector:         Complete
 Live YOLO integration:        Complete
 False-positive reduction:     Complete
-Face enrollment:              Planned
-Known-person recognition:     Planned
+Face enrollment:              Complete
+Face embedding database:      Complete
+Known/unknown recognition:    Complete
+Main pipeline integration:    Complete
+Single-subject safety gate:   Planned
+Liveness / anti-spoof:        Planned
 Jetson deployment hardening:  Planned
 ```
