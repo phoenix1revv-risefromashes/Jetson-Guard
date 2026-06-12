@@ -60,7 +60,7 @@ def build_face_embeddings():
         return
     
     face_database = {
-        "names: ": known_face_names,
+        "names": known_face_names,
         "encodings": known_face_encodings
     }
 
