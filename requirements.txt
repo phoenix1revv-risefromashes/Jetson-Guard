@@ -24,6 +24,9 @@ dbus-python==1.4.0
 defer==1.0.6
 distro==1.9.0
 distro-info==1.15
+dlib==20.0.1
+face-recognition==1.3.0
+face_recognition_models==0.3.0
 filelock==3.29.1
 fonttools==4.63.0
 fsspec==2026.4.0
