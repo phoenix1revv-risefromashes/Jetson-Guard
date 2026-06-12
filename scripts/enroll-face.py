@@ -6,6 +6,10 @@ import re
 import cv2
 from ultralytics import YOLO
 
+
+from build_face_embeddings import build_face_embeddings
+
+
 #Make SRC importable to this script...
 
 
@@ -18,7 +22,7 @@ sys.path.insert(0, str(SRC_DIR))
 from camera import Camera
 from face_detector import FaceDetector
 
-from config import CAMERA_INDEX, KNOW_FACES_DIR, ENROLL_IMAGE_CAPTURE_DELAY, ENROLLMENT_IMAGE_COUNT, YOLO_MODEL_DIR, YOLO_CONFIDENCE_THRESHOLD, MIN_PERSON_HEIGHT_RATIO
+from config import CAMERA_INDEX, KNOWN_FACES_DIR, ENROLL_IMAGE_CAPTURE_DELAY, ENROLLMENT_IMAGE_COUNT, YOLO_MODEL_DIR, YOLO_CONFIDENCE_THRESHOLD, MIN_PERSON_HEIGHT_RATIO
 
 
 def clean_person_name(person_name):
@@ -41,7 +45,7 @@ def enroll_person():
     raw_name = input("Enter Person's Name: ")
     person_name = clean_person_name(raw_name)
 
-    output_person_dir = PROJECT_ROOT / KNOW_FACES_DIR / person_name
+    output_person_dir = PROJECT_ROOT / KNOWN_FACES_DIR / person_name
     output_person_dir.mkdir(parents=True, exist_ok=True)
 
     camera = Camera(CAMERA_INDEX)
@@ -160,7 +164,7 @@ def enroll_person():
                     saved_count += 1
                     last_capture_time = current_time
 
-                    print(f"saved: {image_path}")
+                    
 
                 break
 
@@ -230,3 +234,5 @@ def enroll_person():
 
 if __name__ == "__main__":
     enroll_person()
+    build_face_embeddings()
+    print("Person Enrollment & Face Embedding are successful")

@@ -68,7 +68,7 @@ class FaceRecognizer:
         face_encodings = face_recognition.face_encodings(rgb_face_image)
 
         if len(face_encodings) !=1:
-            return "Unknown/Multiple faces", None
+            return "Unknown face", None
         
         face_encoding = face_encodings[0]
 
