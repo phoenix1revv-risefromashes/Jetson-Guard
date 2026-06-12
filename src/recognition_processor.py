@@ -21,12 +21,54 @@ class RecognitionProcessor:
         return max(faces, key=lambda face: face[2] * face[3])
     
 
+    def draw_center_warning(self, frame, message):
+        frame_height, frame_width = frame.shape[:2]
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.85
+        thickness = 2
+
+        text_size, _ = cv2.getTextSize(message, font, font_scale, thickness)
+        text_width, text_height = text_size
+
+        x = max(20, (frame_width - text_width) // 2)
+        y = 50
+
+        cv2.rectangle(
+            frame,
+            (x - 15, y - text_height - 15),
+            (x + text_width + 15, y + 15),
+            (0, 0, 255),
+            -1,
+        )
+
+        cv2.putText(
+            frame,
+            message,
+            (x, y),
+            font,
+            font_scale,
+            (255, 255, 255),
+            thickness,
+        )
+
+
+
+
+
+
+
+
+    
+
     def process_frame(self, frame):
 
         display_frame = frame.copy()
         frame_height, frame_width = frame.shape[:2]
 
         person_detections = self.yolo_person_detector.detect_persons(frame)
+
+        valid_face_candidates = []
 
         for person in person_detections:
             x1 = max(0, person['x1'])
@@ -68,50 +110,66 @@ class RecognitionProcessor:
             face_crop_rgb = cv2.cvtColor(face_crop_bgr, cv2.COLOR_BGR2RGB)
 
 
-            name, distance = self.face_recognizer.recognize_face_images(
-                face_crop_rgb
+            valid_face_candidates.append(
+                {
+                    "person_box": (x1, y1, x2, y2),
+                    "face_box": (
+                        absolute_face_x1,
+                        absolute_face_y1,
+                        absolute_face_x2,
+                        absolute_face_y2,
+                    ),
+                    "face_crop_rgb": face_crop_rgb,
+                }
             )
+        if len(valid_face_candidates) == 0:
+            return display_frame
 
-            if name == "Unknown":
-                label = "Unknown"
-                box_color = (0, 0, 255)
-            else:
-                label = f"Known: {name}"
-                box_color = (255, 0, 0)
+        if len(valid_face_candidates) > 1:
+            for candidate in valid_face_candidates:
+                x1, y1, x2, y2 = candidate["person_box"]
+                fx1, fy1, fx2, fy2 = candidate["face_box"]
 
-            if distance is not None:
-                label = f"{label} | {distance:.2f}"
+                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                cv2.rectangle(display_frame, (fx1, fy1), (fx2, fy2), (0, 0, 255), 2)
 
-
-
-            #Person Bounding box
-            cv2.rectangle(
+            self.draw_center_warning(
                 display_frame,
-                (x1, y1),
-                (x2, y2),
-                box_color,
-                2,
+                "Multiple faces detected | One person a time Plz",
             )
 
-            #Face Bounding Box
-            cv2.rectangle(
-                display_frame,
-                (absolute_face_x1, absolute_face_y1),
-                (absolute_face_x2, absolute_face_y2),
-                box_color,
-                2,
-            )
+            return display_frame
 
-           #label above person box
-            cv2.putText(
-                display_frame,
-                label,
-                (x1, max(30, y1 - 10)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                box_color,
-                2,
-            )
+        candidate = valid_face_candidates[0]
+
+        x1, y1, x2, y2 = candidate["person_box"]
+        fx1, fy1, fx2, fy2 = candidate["face_box"]
+        face_crop_rgb = candidate["face_crop_rgb"]
+
+        name, distance = self.face_recognizer.recognize_face_images(face_crop_rgb)
+
+        if name == "Unknown":
+            label = "Unknown"
+            box_color = (0, 0, 255)
+        else:
+            label = f"Known: {name}"
+            box_color = (0, 255, 0)
+
+        if distance is not None:
+            label = f"{label} | {distance:.2f}"
+
+        cv2.rectangle(display_frame, (x1, y1), (x2, y2), box_color, 2)
+        cv2.rectangle(display_frame, (fx1, fy1), (fx2, fy2), box_color, 2)
+
+        cv2.putText(
+            display_frame,
+            label,
+            (x1, max(30, y1 - 10)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            box_color,
+            2,
+        )
 
         return display_frame
     
