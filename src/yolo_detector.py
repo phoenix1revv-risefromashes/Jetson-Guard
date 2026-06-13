@@ -11,6 +11,9 @@ class YOLODetector():
         self.confidence_threshold = confidence_threshold
         self.min_person_height_ratio = min_person_height_ratio
         self.model = YOLO(self.model_path)
+        self.model = self.model.to("cuda")
+
+        print(next(self.model.parameters()).device)  # movr to cuda:0
         self.face_detector = FaceDetector()
 
     

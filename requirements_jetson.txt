@@ -1,0 +1,28 @@
+# Jetson Orin / JetPack 6.x / Python 3.10
+# Do not install this with normal desktop requirements.txt.
+# OpenCV should come from system package: sudo apt install python3-opencv opencv-data
+
+setuptools==80.9.0
+wheel
+packaging
+
+numpy==1.26.1
+Pillow
+PyYAML
+requests
+tqdm
+psutil
+py-cpuinfo
+
+dlib
+git+https://github.com/ageitgey/face_recognition_models
+face-recognition
+
+matplotlib
+scipy
+pandas
+seaborn
+
+nvidia-ml-py
+polars
+ultralytics-thop

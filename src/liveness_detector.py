@@ -6,14 +6,14 @@ import face_recognition
 
 class LivenessDetector:
     def __init__(self):
-        self.eye_closed_threshold = 0.19
-        self.eye_open_threshold = 0.24
+        self.eye_closed_threshold = 0.21
+        self.eye_open_threshold = 0.23
 
-        self.required_open_frames_before_blink = 5
-        self.required_closed_frames = 3
-        self.required_open_frames_after_blink = 4
+        self.required_open_frames_before_blink = 2
+        self.required_closed_frames = 1
+        self.required_open_frames_after_blink = 1
 
-        self.spoof_timeout_seconds = 3.0
+        self.spoof_timeout_seconds = 4.0
         self.live_window_seconds = 3.0
 
         self.challenge_start_time = None
@@ -28,6 +28,15 @@ class LivenessDetector:
     def reset(self):
         self.challenge_start_time = None
         self.live_until_time = 0
+
+        self.open_before_count = 0
+        self.closed_count = 0
+        self.open_after_count = 0
+
+        self.state = "waiting_for_open_eyes"
+
+    def reset_blink_sequence(self):
+        self.challenge_start_time = None
 
         self.open_before_count = 0
         self.closed_count = 0
@@ -89,16 +98,18 @@ class LivenessDetector:
 
         elapsed_time = current_time - self.challenge_start_time
 
-        if elapsed_time >= self.spoof_timeout_seconds:
-            return False, "spoof_detected"
-
         eye_ratio = self.get_average_eye_ratio(face_crop_rgb)
 
         if eye_ratio is None:
+            if elapsed_time >= self.spoof_timeout_seconds:
+                return False, "spoof_detected"
+
             return False, "face_not_clear"
 
         eyes_are_open = eye_ratio >= self.eye_open_threshold
         eyes_are_closed = eye_ratio <= self.eye_closed_threshold
+
+        status = "blink_required"
 
         if self.state == "waiting_for_open_eyes":
             if eyes_are_open:
@@ -109,9 +120,9 @@ class LivenessDetector:
             if self.open_before_count >= self.required_open_frames_before_blink:
                 self.state = "waiting_for_closed_eyes"
 
-            return False, "blink_required"
+            status = "blink_required"
 
-        if self.state == "waiting_for_closed_eyes":
+        elif self.state == "waiting_for_closed_eyes":
             if eyes_are_closed:
                 self.closed_count += 1
             else:
@@ -120,9 +131,9 @@ class LivenessDetector:
             if self.closed_count >= self.required_closed_frames:
                 self.state = "waiting_for_reopen_eyes"
 
-            return False, "blink_required"
+            status = "blink_required"
 
-        if self.state == "waiting_for_reopen_eyes":
+        elif self.state == "waiting_for_reopen_eyes":
             if eyes_are_open:
                 self.open_after_count += 1
             else:
@@ -130,15 +141,17 @@ class LivenessDetector:
 
             if self.open_after_count >= self.required_open_frames_after_blink:
                 self.live_until_time = current_time + self.live_window_seconds
-
-                self.challenge_start_time = None
-                self.open_before_count = 0
-                self.closed_count = 0
-                self.open_after_count = 0
-                self.state = "waiting_for_open_eyes"
+                self.reset_blink_sequence()
 
                 return True, "blink_detected"
 
-            return False, "eyes_closed"
+            status = "eyes_closed"
 
-        return False, "blink_required"
+        else:
+            self.reset_blink_sequence()
+            status = "blink_required"
+
+        if elapsed_time >= self.spoof_timeout_seconds:
+            return False, "spoof_detected"
+
+        return False, status
