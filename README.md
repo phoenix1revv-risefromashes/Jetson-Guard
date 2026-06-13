@@ -1,10 +1,15 @@
-# Edge-Based Person Recognition for Safety and Access Monitoring Using Jetson Orin
+# Jetson FaceGuard
 
-An edge-AI computer vision system that detects close human subjects, rejects person-shaped false positives, enrolls known faces locally, and recognizes whether a live subject is known or unknown on NVIDIA Jetson Orin.
+## Edge-Based Person Recognition for Safety and Access Monitoring Using Jetson Orin
+
+Jetson FaceGuard is a final deployable edge-AI vision system for real-time safety and access monitoring. It detects a close human subject from a live camera feed, confirms that the detected person region contains a real face, verifies liveness through blink detection, rejects spoof attempts, and recognizes whether the person is known or unknown directly on NVIDIA Jetson Orin.
+
+The goal of this project was to build a complete local recognition pipeline, not just a model demo. The final system includes person detection, face confirmation, multiple-face safety handling, blink-based liveness verification, known/unknown recognition, Jetson deployment support, and demo-tested bug fixes for real-world edge cases.
+
 
 <p align="center">
   <a href="assets/">
-    <img src="assets/architecture/architecture.png" alt="Project Architecture Flowchart" width="100%">
+    <img src="assets/architecture/system_architecture_final.png" alt="Project Architecture Flowchart" width="100%">
   </a>
 </p>
 
@@ -12,150 +17,74 @@ An edge-AI computer vision system that detects close human subjects, rejects per
   <sub><b>Click the architecture image to browse demos, bug-fix evidence, and project assets.</b></sub>
 </p>
 
----
 
-## Overview
-
-This project uses OpenCV, YOLO, face detection, and face recognition to build a local safety and access-monitoring pipeline.
-
-The system first detects a close person using YOLO, confirms that a visible face exists inside the detected person region, then compares that face against a private local known-face database.
-
-The goal is to run identity-aware recognition locally on edge hardware without relying on cloud inference.
-
----
-
-## Current Version
 
 ```text
-v0.5.0 — Live Known/Unknown Face Recognition
+v1.0.0-jetson — Final NVIDIA Jetson Orin Edge Deployment Version
 ```
 
-Current features:
+---
+
+## Final Product 
+
+Jetson FaceGuard is a completed edge-AI product, not just a model demo.
+
+It is ready for immediate deployment in a controlled local environment using the final Jetson release.
+
+The final system includes:
 
 - Live camera input
 - YOLO-based close-person detection
-- Face confirmation inside detected person regions
-- False-positive rejection for clothing and person-shaped objects
-- Local face enrollment
-- Automatic face embedding update after enrollment
-- Private known-face database
-- Live known/unknown recognition
-- Demo and bug-fix evidence
+- Face confirmation
+- Multiple-face safety handling
+- Blink-based liveness verification
+- Known/unknown recognition
+- Spoof-image rejection
+- Operator-facing monitoring output
+- PC development/testing release
+- NVIDIA Jetson Orin deployment release
 
 ---
 
-## Pipeline
+
+
+## Demos / Bug Fixes
+
+The project was validated through demos, bug-fix evidence, and Jetson deployment testing.
+
+### Demo Cases
 
 ```text
-Camera Frame
-↓
-YOLO Person Detection
-↓
-Close-Subject Filtering
-↓
-Face Confirmation
-↓
-Face Embedding
-↓
-Known-Face Database Comparison
-↓
-Known / Unknown Output
+Real face + blink            → recognition allowed
+Real face without blink      → recognition blocked
+Phone/computer face image    → spoof rejected
+Multiple faces               → recognition paused
+Clothing/person-like object  → rejected after face confirmation
+Jetson deployment            → full pipeline validated on edge hardware
+```
+
+### Main Bug Fixes
+
+- Fixed clothing/person-shaped false positives using face confirmation
+- Added multiple-face safety gate
+- Added blink-based liveness verification
+- Added static phone/computer spoof rejection
+- Fixed Jetson OpenCV Haar cascade loading issue
+- Rebuilt face embeddings on Jetson for runtime compatibility
+- Tuned liveness timing for Jetson hardware speed
+- Solved Jetson PyTorch/CUDA/CUPTI setup issues
+
+### Evidence Folders
+
+```text
+assets/demos/
+assets/bug_evidence/
 ```
 
 ---
-
-## Recognition Logic
-
-Recognition only happens when:
-
-```text
-YOLO detects a person-shaped object
-AND the subject is close enough
-AND a visible face is found inside the detected person box
-AND a valid face embedding is generated
-AND the embedding is compared against the known-face database
-```
-
-The system rejects:
-
-- Hanging clothing
-- Person-shaped background objects
-- Non-human visual noise
-- Body-only detections without a visible face
-- Invalid face crops
-
----
-
-## Face Enrollment
-
-Enroll a new person:
-
-```bash
-python scripts/enroll_face.py
-```
-
-The enrollment script captures verified face crops and saves them locally:
-
-```text
-data/known_faces/<person_name>/
-```
-
-After enrollment, the face embedding database updates automatically:
-
-```text
-data/face_embeddings/known_faces.pkl
-```
-
-Private face images and embeddings are not committed to Git.
-
----
-
-## Run the System
-
-Create and activate a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run live recognition:
-
-```bash
-python src/main.py
-```
-
-Expected output on the camera feed:
-
-```text
-Known: <person_name> | <distance>
-```
-
-or:
-
-```text
-Unknown | <distance>
-```
-
-Quit:
-
-```text
-Press q
-```
-
----
-
 ## Model Training
 
 The YOLO person detector was trained using a COCO person subset.
-
-Training summary:
 
 ```text
 Model:             YOLO11s person detector
@@ -179,22 +108,54 @@ Model output:
 models/person_detector/best.pt
 ```
 
+## Other Implications / Uses
+
+Jetson FaceGuard can be extended into several real-world edge-AI applications:
+
+- Safety monitoring in labs, classrooms, or restricted spaces
+- Local access-control systems
+- Smart door/security camera prototypes
+- Identity-aware edge monitoring without cloud inference
+- Retail or workspace monitoring
+- Human-aware robotics perception
+- Multi-camera safety monitoring systems
+
+The key lesson from this project is that real-world AI is more than training a model. A deployable system needs preprocessing, validation logic, safety gates, hardware calibration, debugging, and clear operator feedback.
+
 ---
 
-## Evidence
+## Final Releases
 
-Demo videos:
+| Release | Purpose |
+|---|---|
+| `v1.0.0-pc` | Final PC development and testing version |
+| `v1.0.0-jetson` | Final NVIDIA Jetson Orin edge deployment version |
 
-```text
-assets/demos/v0.3.0/v0.3.0_yolo_live_close_person_detection_demo.mp4
-assets/demos/v0.5.0/live_known_unknown_face_recognition_demo.mp4
+---
+
+
 ```
 
-Bug-fix evidence:
+---
+
+## Jetson Orin Deployment
+
+The final Jetson version was deployed and validated on NVIDIA Jetson Orin.
+
+Jetson-specific deployment work included:
+
+- Jetson-compatible PyTorch installation
+- CUDA/CUPTI runtime setup
+- OpenCV system package usage
+- Haar cascade path fallback for Jetson OpenCV
+- Known-face embeddings rebuilt on Jetson
+- Jetson-specific blink/liveness timing calibration
+- Final deployment testing on edge hardware
+
+Final Jetson release:
 
 ```text
-assets/bug_evidence/v0.3.1/v0.3.1_before_clothing_false_positive_bug.mp4
-assets/bug_evidence/v0.3.1/v0.3.1_after_face_confirmation_false_positive_fix.mp4
+v1.0.0-jetson
 ```
 
 ---
@@ -223,38 +184,46 @@ data/face_embeddings/known_faces.pkl
 
 | Version | Milestone |
 |---|---|
-| v0.1.0 | Camera pipeline |
-| v0.2.0 | Face detection baseline |
-| v0.3.0 | YOLO close-person detection |
-| v0.3.1 | Clothing false-positive fix |
-| v0.4.0 | Face enrollment |
-| v0.5.0 | Live known/unknown recognition |
+| `v0.1.0` | Camera pipeline |
+| `v0.2.0` | Face detection baseline |
+| `v0.3.0` | YOLO close-person detection |
+| `v0.3.1` | Clothing false-positive fix |
+| `v0.4.0` | Face enrollment |
+| `v0.5.0` | Live known/unknown recognition |
+| `v1.0.0-pc` | Final PC development/testing version |
+| `v1.0.0-jetson` | Final NVIDIA Jetson Orin deployment version |
+
+---
+
+## Technologies Used
+
+- Python
+- OpenCV
+- YOLO / Ultralytics
+- face_recognition
+- dlib
+- NumPy
+- PyTorch / CUDA
+- NVIDIA Jetson Orin
+- Git and GitHub Releases
 
 ---
 
 ## Known Limitations
 
-- Phone-screen face images can still be recognized.
-- Multiple-face handling needs a single-subject safety gate.
-- Liveness / anti-spoof detection is not implemented yet.
-- Recognition needs more testing under lighting, angle, and occlusion changes.
+- Blink-based liveness improves spoof rejection but is not a full production-grade anti-spoofing system.
+- Recognition accuracy can vary under poor lighting, occlusion, or extreme face angles.
+- Multi-person scenes are intentionally paused instead of resolved through tracking.
+- The current system is designed for a single-camera setup.
 
 ---
 
-## Next Milestone
+## Future Improvements
 
-```text
-v0.5.1 — Single-Subject Recognition Gate
-```
-
-Goal:
-
-```text
-Recognize only when exactly one valid face is present.
-```
-
-Planned behavior:
-
-- No valid face: no recognition
-- One valid face: run known/unknown recognition
-- Multiple valid faces: pause recognition and show warning
+- Stronger anti-spoofing model
+- Face tracking across frames
+- Event logging dashboard
+- Multi-camera support
+- Better low-light recognition
+- Access-control hardware integration
+- Jetson performance optimization
