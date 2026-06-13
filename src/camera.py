@@ -1,8 +1,9 @@
 import cv2
+from config import CAMERA_INDEX
 
 class Camera:
     def __init__(self, camera_index):
-        self.camera_index= camera_index
+        self.camera_index= CAMERA_INDEX
         self.capture =None
 
     def open_camera(self):

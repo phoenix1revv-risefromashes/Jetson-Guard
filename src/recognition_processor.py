@@ -146,7 +146,12 @@ class RecognitionProcessor:
         fx1, fy1, fx2, fy2 = candidate["face_box"]
         face_crop_rgb = candidate["face_crop_rgb"]
 
+
+
         is_live, liveness_status = self.liveness_detector.update(face_crop_rgb)
+
+
+        
 
         if not is_live:
             self.draw_paused_candidate(
