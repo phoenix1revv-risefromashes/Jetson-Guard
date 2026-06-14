@@ -2,6 +2,14 @@
 
 ## Edge-Based Person Verification and Monitoring System Using Jetson Orin
 
+## Project Status
+
+**Status:** Completed  
+**Final Release:** `v1.0.0-jetson and v1.0.0-pc`  
+**Deployment Target:** NVIDIA Jetson Orin  
+**Project Type:** Edge-AI person verification and monitoring system
+
+
 Jetson Guard is a deployable edge-AI vision system that acts as a local person-verification layer before another system trusts, monitors, or responds to a human subject. Running directly on NVIDIA Jetson Orin, it detects a nearby person from a live camera feed, validates that the detected region contains a real face, verifies liveness through blink detection, rejects spoof attempts, and classifies the verified subject as Known or Unknown without cloud inference.
 
 The project is built as a practical guard point for real-world automation systems, not just a model demo. Once a live person is verified, the same pipeline can immediately branch into access control, restricted-area monitoring, operator verification, safety alerts, activity monitoring, or person-aware robotics workflows.
