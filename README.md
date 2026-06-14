@@ -1,7 +1,5 @@
 # Jetson Guard
 
-## Edge-Based Person Verification and Monitoring System Using Jetson Orin
-
 ## Project Status
 
 **Status:** Completed  
