@@ -1,12 +1,13 @@
 # Jetson Guard
 
-## Project Status
+```text
+Project Status:
 
 **Status:** Completed  
 **Final Release:** `v1.0.0-jetson and v1.0.0-pc`  
 **Deployment Target:** NVIDIA Jetson Orin  
 **Project Type:** Edge-AI person verification and monitoring system
-```text
+
 ```
 
 
