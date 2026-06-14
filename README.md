@@ -38,7 +38,7 @@ v1.0.0-jetson — Final NVIDIA Jetson Orin Edge Deployment Version
 
 ```
 
-
+## System Architecture
 <p align="center">
   <a href="assets/">
     <img src="assets/architecture/system_architecture_final.png" alt="Project Architecture Flowchart" width="100%">
