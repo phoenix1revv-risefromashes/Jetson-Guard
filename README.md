@@ -1,10 +1,30 @@
-# Jetson FaceGuard
+# Jetson Guard
 
-## Edge-Based Person Recognition for Safety and Access Monitoring Using Jetson Orin
+## Edge-Based Person Verification and Monitoring System Using Jetson Orin
 
-Jetson FaceGuard is a final deployable edge-AI vision system for real-time safety and access monitoring. It detects a close human subject from a live camera feed, confirms that the detected person region contains a real face, verifies liveness through blink detection, rejects spoof attempts, and recognizes whether the person is known or unknown directly on NVIDIA Jetson Orin.
+Jetson Guard is a deployable edge-AI vision system that acts as a local person-verification layer before another system trusts, monitors, or responds to a human subject. Running directly on NVIDIA Jetson Orin, it detects a nearby person from a live camera feed, validates that the detected region contains a real face, verifies liveness through blink detection, rejects spoof attempts, and classifies the verified subject as Known or Unknown without cloud inference.
 
-The goal of this project was to build a complete local recognition pipeline, not just a model demo. The final system includes person detection, face confirmation, multiple-face safety handling, blink-based liveness verification, known/unknown recognition, Jetson deployment support, and demo-tested bug fixes for real-world edge cases.
+The project is built as a practical guard point for real-world automation systems, not just a model demo. Once a live person is verified, the same pipeline can immediately branch into access control, restricted-area monitoring, operator verification, safety alerts, activity monitoring, or person-aware robotics workflows.
+
+## Immediate Use Cases
+
+The following are the immediate use cases of this product:
+
+| Use Case | Immediate Value |
+|---|---|
+| Access control | Verifies a live Known/Unknown person before allowing entry |
+| Restricted-area monitoring | Detects and verifies people in sensitive or controlled spaces |
+| Operator verification | Confirms an authorized person before enabling a machine, robot, or workflow |
+| Safety monitoring | Verifies people near labs, robots, equipment, or hazardous zones |
+| Activity monitoring | Starts tracking activity only after confirming a real live person |
+| Smart security camera | Performs local person verification without cloud inference |
+| Attendance / presence verification | Confirms physical presence using live-person validation |
+| Human-aware robotics | Lets robots respond only after verifying a real person nearby |
+| Automation trigger system | Uses person verification before triggering doors, lights, alarms, logs, or robot behavior |
+| Edge-AI security prototype | Provides a foundation for future access-control, monitoring, and person-aware automation systems |
+
+```text
+v1.0.0-jetson — Final NVIDIA Jetson Orin Edge Deployment Version
 
 
 <p align="center">
@@ -23,26 +43,6 @@ The goal of this project was to build a complete local recognition pipeline, not
 v1.0.0-jetson — Final NVIDIA Jetson Orin Edge Deployment Version
 ```
 
----
-
-## Final Product 
-
-Jetson FaceGuard is a completed edge-AI product, not just a model demo.
-
-It is ready for immediate deployment in a controlled local environment using the final Jetson release.
-
-The final system includes:
-
-- Live camera input
-- YOLO-based close-person detection
-- Face confirmation
-- Multiple-face safety handling
-- Blink-based liveness verification
-- Known/unknown recognition
-- Spoof-image rejection
-- Operator-facing monitoring output
-- PC development/testing release
-- NVIDIA Jetson Orin deployment release
 
 ---
 
@@ -65,7 +65,7 @@ Jetson deployment            → full pipeline validated on edge hardware
 
 ### Main Bug Fixes
 
-- Fixed clothing/person-shaped false positives using face confirmation
+- Fixed person-shaped false positives using face confirmation
 - Added multiple-face safety gate
 - Added blink-based liveness verification
 - Added static phone/computer spoof rejection
@@ -87,7 +87,7 @@ assets/bug_evidence/
 The YOLO person detector was trained using a COCO person subset.
 
 ```text
-Model:             YOLO11s person detector
+Model:             YOLO11m person detector
 Training images:   10,000
 Validation images: 2,000
 Epochs:            50
