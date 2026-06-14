@@ -26,6 +26,8 @@ The following are the immediate use cases of this product:
 ```text
 v1.0.0-jetson — Final NVIDIA Jetson Orin Edge Deployment Version
 
+```
+
 
 <p align="center">
   <a href="assets/">
