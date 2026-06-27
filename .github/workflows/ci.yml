@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linting tools
+        run: pip install flake8
+
+      - name: Lint with flake8
+        run: |
+          flake8 src/ scripts/ \
+            --max-line-length=160 \
+            --ignore=E101,E202,E211,E221,E222,E225,E226,E231,E251,E265,E301,E302,E303,E305,E402,E501,F403,F405,F541,F811,W291,W292,W293,W391,W503,W504 \
+            --count --statistics
+
+  validate:
+    name: Validate Structure & Config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lightweight deps
+        run: pip install pyyaml numpy
+
+      - name: Check source module syntax
+        run: |
+          python -m py_compile src/camera.py
+          python -m py_compile src/config.py
+          python -m py_compile src/face_detector.py
+          python -m py_compile src/face_recognizer.py
+          python -m py_compile src/recognition_processor.py
+          python -m py_compile src/yolo_detector.py
+          python -m py_compile src/main.py
+          echo "All source modules passed syntax check"
+
+      - name: Check script syntax
+        run: |
+          for f in scripts/*.py; do
+            python -m py_compile "$f" && echo "OK: $f"
+          done
+
+      - name: Validate dataset config
+        run: |
+          python - <<'EOF'
+          import yaml, sys
+
+          with open("datasets/detection/data.yaml") as f:
+              cfg = yaml.safe_load(f)
+
+          required = ["train", "val", "nc", "names"]
+          missing = [k for k in required if k not in cfg]
+          if missing:
+              print(f"Missing keys in data.yaml: {missing}")
+              sys.exit(1)
+
+          assert cfg["nc"] == len(cfg["names"]), \
+              f"nc={cfg['nc']} but {len(cfg['names'])} class names"
+
+          print(f"data.yaml valid — {cfg['nc']} class(es): {cfg['names']}")
+          EOF
+
+      - name: Verify project structure
+        run: |
+          python - <<'EOF'
+          import os, sys
+
+          required = [
+              "src/main.py",
+              "src/config.py",
+              "src/camera.py",
+              "src/face_detector.py",
+              "src/face_recognizer.py",
+              "src/yolo_detector.py",
+              "src/recognition_processor.py",
+              "datasets/detection/data.yaml",
+              "requirements.txt",
+              "data/face_embeddings/.gitkeep",
+              "data/known_faces/.gitkeep",
+          ]
+
+          missing = [p for p in required if not os.path.exists(p)]
+          if missing:
+              print("Missing files:")
+              for p in missing:
+                  print(f"  {p}")
+              sys.exit(1)
+
+          print(f"Project structure OK — {len(required)} paths verified")
+          EOF
+
+      - name: Validate requirements.txt
+        run: |
+          python - <<'EOF'
+          expected = [
+              "face-recognition", "dlib", "opencv-python",
+              "ultralytics", "torch", "numpy",
+          ]
+          with open("requirements.txt") as f:
+              content = f.read().lower()
+
+          missing = [pkg for pkg in expected if pkg.lower() not in content]
+          if missing:
+              print(f"requirements.txt missing expected packages: {missing}")
+              import sys; sys.exit(1)
+
+          print("requirements.txt validated — all key packages present")
+          EOF
