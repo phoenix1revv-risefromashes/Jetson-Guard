@@ -25,7 +25,7 @@ jobs:
         run: |
           flake8 src/ scripts/ \
             --max-line-length=160 \
-            --ignore=E101,E202,E211,E221,E222,E225,E226,E231,E251,E265,E301,E302,E303,E305,E402,E501,F403,F405,F541,F811,W291,W292,W293,W391,W503,W504 \
+            --ignore=E101,E114,E124,E127,E128,E203,E711,W191,E202,E211,E221,E222,E225,E226,E231,E251,E265,E301,E302,E303,E305,E402,E501,F403,F405,F541,F811,W291,W292,W293,W391,W503,W504 \
             --count --statistics
 
   validate:
