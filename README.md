@@ -1,5 +1,7 @@
 # Jetson Guard
 
+[![CI](https://github.com/phoenix1revv-risefromashes/Jetson-Guard/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenix1revv-risefromashes/Jetson-Guard/actions/workflows/ci.yml)
+
 ```text
 Project Status:
 
